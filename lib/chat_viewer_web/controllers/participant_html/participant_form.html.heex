@@ -1,0 +1,15 @@
+<.simple_form :let={f} for={@changeset} action={@action}>
+  <.error :if={@changeset.action}>
+    Oops, something went wrong! Please check the errors below.
+  </.error>
+  <.input field={f[:name]} type="text" label="Name" />
+  <.input field={f[:facebook_name]} type="text" label="Facebook name" />
+  <.input field={f[:facebook_id]} type="text" label="Facebook" />
+  <.input field={f[:facebook_slug]} type="text" label="Facebook slug" />
+  <.input field={f[:discord_name]} type="text" label="Discord name" />
+  <.input field={f[:discord_id]} type="text" label="Discord" />
+  <.input field={f[:discord_avatar]} type="text" label="Discord avatar" />
+  <:actions>
+    <.button>Save Participant</.button>
+  </:actions>
+</.simple_form>

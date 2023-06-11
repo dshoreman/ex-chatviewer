@@ -21,6 +21,7 @@ defmodule ChatViewerWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
 
     get "/", PageController, :home
+    resources "/people", ParticipantController
   end
 
   # Other scopes may use custom stacks.

@@ -1,0 +1,21 @@
+<.header>
+  Participant <%= @participant.id %>
+  <:subtitle>This is a participant record from your database.</:subtitle>
+  <:actions>
+    <.link href={~p"/people/#{@participant}/edit"}>
+      <.button>Edit participant</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @participant.name %></:item>
+  <:item title="Facebook name"><%= @participant.facebook_name %></:item>
+  <:item title="Facebook"><%= @participant.facebook_id %></:item>
+  <:item title="Facebook slug"><%= @participant.facebook_slug %></:item>
+  <:item title="Discord name"><%= @participant.discord_name %></:item>
+  <:item title="Discord"><%= @participant.discord_id %></:item>
+  <:item title="Discord avatar"><%= @participant.discord_avatar %></:item>
+</.list>
+
+<.back navigate={~p"/people"}>Back to people</.back>

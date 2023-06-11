@@ -1,0 +1,29 @@
+<.header>
+  Listing People
+  <:actions>
+    <.link href={~p"/people/new"}>
+      <.button>New Participant</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table id="people" rows={@people} row_click={&JS.navigate(~p"/people/#{&1}")}>
+  <:col :let={participant} label="Name"><%= participant.name %></:col>
+  <:col :let={participant} label="Facebook name"><%= participant.facebook_name %></:col>
+  <:col :let={participant} label="Facebook"><%= participant.facebook_id %></:col>
+  <:col :let={participant} label="Facebook slug"><%= participant.facebook_slug %></:col>
+  <:col :let={participant} label="Discord name"><%= participant.discord_name %></:col>
+  <:col :let={participant} label="Discord"><%= participant.discord_id %></:col>
+  <:col :let={participant} label="Discord avatar"><%= participant.discord_avatar %></:col>
+  <:action :let={participant}>
+    <div class="sr-only">
+      <.link navigate={~p"/people/#{participant}"}>Show</.link>
+    </div>
+    <.link navigate={~p"/people/#{participant}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={participant}>
+    <.link href={~p"/people/#{participant}"} method="delete" data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>
