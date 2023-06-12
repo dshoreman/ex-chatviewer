@@ -1,0 +1,8 @@
+<.header>
+  Edit Facebook dump <%= @facebook_dump.id %>
+  <:subtitle>Use this form to manage facebook_dump records in your database.</:subtitle>
+</.header>
+
+<.facebook_dump_form changeset={@changeset} action={~p"/sources/facebook/#{@facebook_dump}"} />
+
+<.back navigate={~p"/sources/facebook"}>Back to facebook_dumps</.back>

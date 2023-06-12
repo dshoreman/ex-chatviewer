@@ -1,0 +1,16 @@
+<.header>
+  Facebook dump <%= @facebook_dump.id %>
+  <:subtitle>This is a facebook_dump record from your database.</:subtitle>
+  <:actions>
+    <.link href={~p"/sources/facebook/#{@facebook_dump}/edit"}>
+      <.button>Edit facebook_dump</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @facebook_dump.name %></:item>
+  <:item title="Path"><%= @facebook_dump.path %></:item>
+</.list>
+
+<.back navigate={~p"/sources/facebook"}>Back to facebook_dumps</.back>

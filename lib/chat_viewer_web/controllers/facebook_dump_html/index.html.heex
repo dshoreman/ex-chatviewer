@@ -1,0 +1,24 @@
+<.header>
+  Listing Facebook dumps
+  <:actions>
+    <.link href={~p"/sources/facebook/new"}>
+      <.button>New Facebook dump</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table id="facebook_dumps" rows={@facebook_dumps} row_click={&JS.navigate(~p"/sources/facebook/#{&1}")}>
+  <:col :let={facebook_dump} label="Name"><%= facebook_dump.name %></:col>
+  <:col :let={facebook_dump} label="Path"><%= facebook_dump.path %></:col>
+  <:action :let={facebook_dump}>
+    <div class="sr-only">
+      <.link navigate={~p"/sources/facebook/#{facebook_dump}"}>Show</.link>
+    </div>
+    <.link navigate={~p"/sources/facebook/#{facebook_dump}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={facebook_dump}>
+    <.link href={~p"/sources/facebook/#{facebook_dump}"} method="delete" data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>
