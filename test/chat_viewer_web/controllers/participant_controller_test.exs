@@ -1,6 +1,7 @@
 defmodule ChatViewerWeb.ParticipantControllerTest do
   use ChatViewerWeb.ConnCase
 
+  import ChatViewer.AccountsFixtures
   import ChatViewer.ChatsFixtures
 
   @create_attrs %{discord_avatar: "some discord_avatar", discord_id: "some discord_id", discord_name: "some discord_name", facebook_id: "some facebook_id", facebook_name: "some facebook_name", facebook_slug: "some facebook_slug", name: "some name"}
@@ -9,21 +10,21 @@ defmodule ChatViewerWeb.ParticipantControllerTest do
 
   describe "index" do
     test "lists all people", %{conn: conn} do
-      conn = get(conn, ~p"/people")
+      conn = get(log_in_user(conn, user_fixture()), ~p"/people")
       assert html_response(conn, 200) =~ "Listing People"
     end
   end
 
   describe "new participant" do
     test "renders form", %{conn: conn} do
-      conn = get(conn, ~p"/people/new")
+      conn = get(log_in_user(conn, user_fixture()), ~p"/people/new")
       assert html_response(conn, 200) =~ "New Participant"
     end
   end
 
   describe "create participant" do
     test "redirects to show when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/people", participant: @create_attrs)
+      conn = post(log_in_user(conn, user_fixture()), ~p"/people", participant: @create_attrs)
 
       assert %{id: id} = redirected_params(conn)
       assert redirected_to(conn) == ~p"/people/#{id}"
@@ -33,7 +34,7 @@ defmodule ChatViewerWeb.ParticipantControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, ~p"/people", participant: @invalid_attrs)
+      conn = post(log_in_user(conn, user_fixture()), ~p"/people", participant: @invalid_attrs)
       assert html_response(conn, 200) =~ "New Participant"
     end
   end
@@ -42,7 +43,7 @@ defmodule ChatViewerWeb.ParticipantControllerTest do
     setup [:create_participant]
 
     test "renders form for editing chosen participant", %{conn: conn, participant: participant} do
-      conn = get(conn, ~p"/people/#{participant}/edit")
+      conn = get(log_in_user(conn, user_fixture()), ~p"/people/#{participant}/edit")
       assert html_response(conn, 200) =~ "Edit Participant"
     end
   end
@@ -51,7 +52,7 @@ defmodule ChatViewerWeb.ParticipantControllerTest do
     setup [:create_participant]
 
     test "redirects when data is valid", %{conn: conn, participant: participant} do
-      conn = put(conn, ~p"/people/#{participant}", participant: @update_attrs)
+      conn = put(log_in_user(conn, user_fixture()), ~p"/people/#{participant}", participant: @update_attrs)
       assert redirected_to(conn) == ~p"/people/#{participant}"
 
       conn = get(conn, ~p"/people/#{participant}")
@@ -59,7 +60,7 @@ defmodule ChatViewerWeb.ParticipantControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn, participant: participant} do
-      conn = put(conn, ~p"/people/#{participant}", participant: @invalid_attrs)
+      conn = put(log_in_user(conn, user_fixture()), ~p"/people/#{participant}", participant: @invalid_attrs)
       assert html_response(conn, 200) =~ "Edit Participant"
     end
   end
@@ -68,7 +69,7 @@ defmodule ChatViewerWeb.ParticipantControllerTest do
     setup [:create_participant]
 
     test "deletes chosen participant", %{conn: conn, participant: participant} do
-      conn = delete(conn, ~p"/people/#{participant}")
+      conn = delete(log_in_user(conn, user_fixture()), ~p"/people/#{participant}")
       assert redirected_to(conn) == ~p"/people"
 
       assert_error_sent 404, fn ->

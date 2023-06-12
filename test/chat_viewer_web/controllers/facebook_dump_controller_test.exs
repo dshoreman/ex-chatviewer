@@ -1,6 +1,7 @@
 defmodule ChatViewerWeb.FacebookDumpControllerTest do
   use ChatViewerWeb.ConnCase
 
+  import ChatViewer.AccountsFixtures
   import ChatViewer.SourcesFixtures
 
   @create_attrs %{name: "some name", path: "some path"}
@@ -9,21 +10,23 @@ defmodule ChatViewerWeb.FacebookDumpControllerTest do
 
   describe "index" do
     test "lists all facebook_dumps", %{conn: conn} do
-      conn = get(conn, ~p"/sources/facebook")
+      conn = get(log_in_user(conn, user_fixture()), ~p"/sources/facebook")
       assert html_response(conn, 200) =~ "Listing Facebook dumps"
     end
   end
 
   describe "new facebook_dump" do
     test "renders form", %{conn: conn} do
-      conn = get(conn, ~p"/sources/facebook/new")
+      conn = get(log_in_user(conn, user_fixture()), ~p"/sources/facebook/new")
       assert html_response(conn, 200) =~ "New Facebook dump"
     end
   end
 
   describe "create facebook_dump" do
     test "redirects to show when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/sources/facebook", facebook_dump: @create_attrs)
+      conn = conn
+        |> log_in_user(user_fixture())
+        |> post(~p"/sources/facebook", facebook_dump: @create_attrs)
 
       assert %{id: id} = redirected_params(conn)
       assert redirected_to(conn) == ~p"/sources/facebook/#{id}"
@@ -33,7 +36,9 @@ defmodule ChatViewerWeb.FacebookDumpControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, ~p"/sources/facebook", facebook_dump: @invalid_attrs)
+      conn = conn
+        |> log_in_user(user_fixture())
+        |> post(~p"/sources/facebook", facebook_dump: @invalid_attrs)
       assert html_response(conn, 200) =~ "New Facebook dump"
     end
   end
@@ -42,7 +47,7 @@ defmodule ChatViewerWeb.FacebookDumpControllerTest do
     setup [:create_facebook_dump]
 
     test "renders form for editing chosen facebook_dump", %{conn: conn, facebook_dump: facebook_dump} do
-      conn = get(conn, ~p"/sources/facebook/#{facebook_dump}/edit")
+      conn = get(log_in_user(conn, user_fixture()), ~p"/sources/facebook/#{facebook_dump}/edit")
       assert html_response(conn, 200) =~ "Edit Facebook dump"
     end
   end
@@ -51,7 +56,9 @@ defmodule ChatViewerWeb.FacebookDumpControllerTest do
     setup [:create_facebook_dump]
 
     test "redirects when data is valid", %{conn: conn, facebook_dump: facebook_dump} do
-      conn = put(conn, ~p"/sources/facebook/#{facebook_dump}", facebook_dump: @update_attrs)
+      conn = conn
+        |> log_in_user(user_fixture())
+        |> put(~p"/sources/facebook/#{facebook_dump}", facebook_dump: @update_attrs)
       assert redirected_to(conn) == ~p"/sources/facebook/#{facebook_dump}"
 
       conn = get(conn, ~p"/sources/facebook/#{facebook_dump}")
@@ -59,7 +66,9 @@ defmodule ChatViewerWeb.FacebookDumpControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn, facebook_dump: facebook_dump} do
-      conn = put(conn, ~p"/sources/facebook/#{facebook_dump}", facebook_dump: @invalid_attrs)
+      conn = conn
+        |> log_in_user(user_fixture())
+        |> put(~p"/sources/facebook/#{facebook_dump}", facebook_dump: @invalid_attrs)
       assert html_response(conn, 200) =~ "Edit Facebook dump"
     end
   end
@@ -68,7 +77,7 @@ defmodule ChatViewerWeb.FacebookDumpControllerTest do
     setup [:create_facebook_dump]
 
     test "deletes chosen facebook_dump", %{conn: conn, facebook_dump: facebook_dump} do
-      conn = delete(conn, ~p"/sources/facebook/#{facebook_dump}")
+      conn = delete(log_in_user(conn, user_fixture()), ~p"/sources/facebook/#{facebook_dump}")
       assert redirected_to(conn) == ~p"/sources/facebook"
 
       assert_error_sent 404, fn ->
