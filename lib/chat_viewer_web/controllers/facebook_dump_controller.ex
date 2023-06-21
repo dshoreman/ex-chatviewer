@@ -4,11 +4,6 @@ defmodule ChatViewerWeb.FacebookDumpController do
   alias ChatViewer.Sources
   alias ChatViewer.Sources.FacebookDump
 
-  def index(conn, _params) do
-    facebook_dumps = Sources.list_facebook_dumps()
-    render(conn, :index, facebook_dumps: facebook_dumps)
-  end
-
   def new(conn, _params) do
     changeset = Sources.change_facebook_dump(%FacebookDump{})
     render(conn, :new, changeset: changeset)

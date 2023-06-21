@@ -22,6 +22,8 @@ defmodule ChatViewerWeb.Router do
 
     get "/", PageController, :home
     resources "/people", ParticipantController
+
+    get "/sources", PageController, :sources
     resources "/sources/facebook", FacebookDumpController
   end
 
