@@ -20,9 +20,18 @@
     </label>
 </div>
 
+<div id="uploads">
+  <h2 class="font-semibold text-xl mt-5">Top-level Files</h2>
+  <div id="uploads_global"></div>
+</div>
+
 <.back navigate={~p"/sources"}>Back to sources</.back>
 
  <script>
+   const capitalise = (s) =>
+     s.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
+       .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase());
+
    async function upload(e) {
      const items = e.dataTransfer.items,
        entry = items.length === 1 ? items[0].webkitGetAsEntry() : false;
@@ -32,8 +41,38 @@
        return;
      }
 
-     const files = await processEntry(entry);
+     const files = {};
+
+     for await (const e of walkTree(entry)) {
+       console.info(e)
+       switch (e.name) {
+         case 'inbox':
+           break;
+         case 'photos':
+         case 'stickers_used':
+           addFolder(e, files);
+           break;
+         default:
+           console.error("Unhandled top-level item '" + e.name + "'");
+       }
+     }
      console.log("File list:", files);
+   }
+
+   async function addFolder(entry, map, parent = 'global') {
+     const el = document.getElementById('uploads_' + parent),
+       countId = 'count_' + parent + '_' + entry.name;
+
+     if (!Object.hasOwn(map, parent)) {
+       map[parent] = {};
+     }
+
+     el.innerHTML += '<h2 class="text-xl mt-2">' + capitalise(entry.name) + ' (<span id="' + countId + '">0</span>)' + '</h2>';
+
+     items = await processEntry(entry);
+     map[parent][entry.name] = items;
+
+     document.getElementById(countId).innerText = items.length;
    }
 
    async function processEntry(entry, items = []) {
