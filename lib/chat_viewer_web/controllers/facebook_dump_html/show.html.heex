@@ -66,8 +66,18 @@
    }
 
    function addLogFile(entry, map, parent) {
-     el('uploads_' + parent).innerHTML += '<h2 class="text-xl mt-2">' + entry.name + '</h2>';
-     map[parent][entry.name] = entry;
+     const contact = el('uploads_' + parent),
+       logdiv = 'uploads_' + parent + '_logs';
+
+     if (!Object.hasOwn(map[parent], 'logs')) {
+       contact.innerHTML += '<h2 class="text-xl mt-2">Logs (<span id="' + logdiv + 'Count">0</span>)' + '</h2>';
+       contact.innerHTML += '<ul id="' + logdiv + '"></yl>';
+       map[parent]['logs'] = [];
+     }
+
+     el(logdiv).innerHTML += '<li>' + entry.name + '</li>';
+     el(logdiv + 'Count').innerText = 1 + parseInt(el(logdiv + 'Count').innerText);
+     map[parent]['logs'].push(entry);
    }
 
    async function addFolder(entry, map, parent = 'global') {
