@@ -3,9 +3,9 @@ defmodule ChatViewer.Repo.Migrations.CreateFacebookDumps do
 
   def change do
     create table(:facebook_dumps) do
+      add :user_id, references(:users, on_delete: :nothing)
       add :name, :string
       add :path, :string
-      add :user_id, references(:users, on_delete: :nothing)
 
       timestamps()
     end

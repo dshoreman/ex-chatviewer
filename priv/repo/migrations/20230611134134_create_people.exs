@@ -3,6 +3,7 @@ defmodule ChatViewer.Repo.Migrations.CreatePeople do
 
   def change do
     create table(:people) do
+      add :user_id, references(:users, on_delete: :nothing)
       add :name, :string
       add :facebook_name, :string
       add :facebook_id, :string
@@ -10,7 +11,6 @@ defmodule ChatViewer.Repo.Migrations.CreatePeople do
       add :discord_name, :string
       add :discord_id, :string
       add :discord_avatar, :string
-      add :user_id, references(:users, on_delete: :nothing)
 
       timestamps()
     end
