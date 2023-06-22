@@ -23,22 +23,44 @@
 <.back navigate={~p"/sources"}>Back to sources</.back>
 
  <script>
-   function upload(e) {
-     const items = e.dataTransfer.items;
+   async function upload(e) {
+     const items = e.dataTransfer.items,
+       entry = items.length === 1 ? items[0].webkitGetAsEntry() : false;
 
-     for (let i = 0; i < items.length; i++) {
-       let entry = items[i].webkitGetAsEntry(),
-         warning = null === entry ? "Invalid entry." : entry.isFile
-           ? entry.name + " is an " + items[i].type + " file."
-           : "Can't determine type of " + entry.name;
+     if (!entry || !entry.isDirectory || 'messages' !== entry.name) {
+       alert("Please drop only the 'messages' folder!");
+       return;
+     }
 
-       if (!entry || entry.isFile || !entry.isDirectory) {
-         console.warn("Dropped item ignored! " + warning);
-         continue;
+     const files = await processEntry(entry);
+     console.log("File list:", files);
+   }
+
+   async function processEntry(entry, items = []) {
+     items.push(entry);
+
+     if (entry.isDirectory) {
+       for await (const e of walkTree(entry)) {
+         await processEntry(e, items)
        }
+     }
 
-       console.info("Dropped directory '" + entry.name + "' (" + entry.fullPath + ")")
-       console.log(items[i], entry)
+     return items;
+   }
+
+   async function* walkTree(dir) {
+     const reader = dir.createReader(),
+       nextBatch = () => new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+
+     while (true) {
+       let entries = await nextBatch();
+
+       if (!entries.length) {
+         break;
+       }
+       for (const entry of entries) {
+         yield entry;
+       }
      }
    }
  </script>
