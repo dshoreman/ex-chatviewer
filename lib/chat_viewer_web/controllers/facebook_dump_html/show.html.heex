@@ -20,17 +20,15 @@
     </label>
 </div>
 
-<div id="uploads">
-  <h2 class="font-semibold text-xl mt-5">Top-level Files</h2>
-  <div id="uploads_global"></div>
-</div>
+<div id="uploads"></div>
 
 <.back navigate={~p"/sources"}>Back to sources</.back>
 
  <script>
    const capitalise = (s) =>
      s.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
-       .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase());
+       .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase()),
+     el = (id) => document.getElementById(id);
 
    async function upload(e) {
      const items = e.dataTransfer.items,
@@ -47,6 +45,14 @@
        console.info(e)
        switch (e.name) {
          case 'inbox':
+           for await (const contactDir of walkTree(e)) {
+             console.info("Found backup for " + contactDir.name);
+             for await (const contactItem of walkTree(contactDir)) {
+               contactItem.isDirectory
+                 ? addFolder(contactItem, files, contactDir.name)
+                 : addLogFile(contactItem, files, contactDir.name)
+             }
+           }
            break;
          case 'photos':
          case 'stickers_used':
@@ -59,15 +65,24 @@
      console.log("File list:", files);
    }
 
-   async function addFolder(entry, map, parent = 'global') {
-     const el = document.getElementById('uploads_' + parent),
-       countId = 'count_' + parent + '_' + entry.name;
+   function addLogFile(entry, map, parent) {
+     el('uploads_' + parent).innerHTML += '<h2 class="text-xl mt-2">' + entry.name + '</h2>';
+     map[parent][entry.name] = entry;
+   }
 
+   async function addFolder(entry, map, parent = 'global') {
      if (!Object.hasOwn(map, parent)) {
+       const heading = 'global' === parent ? 'Top-level Files' : parent;
+
+       el('uploads').innerHTML += '<h2 class="font-semibold text-xl mt-5">' + heading + '</h2>';
+       el('uploads').innerHTML += '<div id="uploads_' + parent + '"></div>';
        map[parent] = {};
      }
 
-     el.innerHTML += '<h2 class="text-xl mt-2">' + capitalise(entry.name) + ' (<span id="' + countId + '">0</span>)' + '</h2>';
+     const div = el('uploads_' + parent),
+       countId = 'count_' + parent + '_' + entry.name;
+
+     div.innerHTML += '<h2 class="text-xl mt-2">' + capitalise(entry.name) + ' (<span id="' + countId + '">0</span>)' + '</h2>';
 
      items = await processEntry(entry);
      map[parent][entry.name] = items;
