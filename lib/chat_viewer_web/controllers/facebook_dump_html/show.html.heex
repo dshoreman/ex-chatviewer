@@ -93,10 +93,19 @@
        categoryCount = el('count_' + parent + '_' + dir);
 
      items.forEach(file => {
-       let itemClass = "bg-slate-100 rounded border-2 border-slate-200 text-xs text-ellipsis overflow-hidden"
+       let itemClass = "bg-slate-100 rounded border-2 text-center align-bottom border-slate-200 text-xs text-ellipsis overflow-hidden";
 
-       el(categoryList).innerHTML += `<li class="${itemClass}">${file.name}</li>`;
+       el(categoryList).innerHTML += `<li id="file_${file.name}" class="${itemClass}">${file.name}</li>`;
        categoryCount.innerText = 1 + parseInt(categoryCount.innerText);
+
+       file.file(file => {
+         if (file.type.startsWith('image/')) {
+           const uri = URL.createObjectURL(file)
+           preview = `<img src="${uri}" class="object-scale-down h-28 w-full p-1" />`;
+           el(`file_${file.name}`).innerHTML = preview + el(`file_${file.name}`).innerHTML + ` (${file.size} bytes)`;
+           el(`file_${file.name}`).querySelectorAll('img')[0].onload = () => URL.revokeObjectURL(uri);
+         }
+       })
      });
    }
 
@@ -106,7 +115,7 @@
      ] : [
        capitalise(dir) + ` (<span id="count_${parent}_${dir}">0</span>)`, 'ul',
        `uploads_${parent}`, `uploads_${parent}_${dir}`,
-       'text-xl mt-2', 'grid grid-cols-3 gap-2 max-h-64 overflow-auto p-2',
+       'text-xl mt-2', 'grid grid-cols-5 gap-2 max-h-64 overflow-auto p-2',
      ];
 
      el(parentDiv).innerHTML += `<h2 class="${h2Class}">${title}</h2>`;
