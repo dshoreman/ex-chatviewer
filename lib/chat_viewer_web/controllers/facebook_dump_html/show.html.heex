@@ -101,12 +101,12 @@
    }
 
    async function processEntry(entry, items = []) {
-     items.push(entry);
-
      if (entry.isDirectory) {
        for await (const e of walkTree(entry)) {
          await processEntry(e, items)
        }
+     } else {
+       items.push(entry);
      }
 
      return items;
