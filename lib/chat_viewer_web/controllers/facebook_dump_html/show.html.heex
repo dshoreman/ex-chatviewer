@@ -99,23 +99,44 @@
        categoryCount.innerText = 1 + parseInt(categoryCount.innerText);
 
        file.file(file => {
+         const fileItem = el(`file_${file.name}`);
+
          if (file.type.startsWith('image/')) {
-           const uri = URL.createObjectURL(file)
-           preview = `<img src="${uri}" class="object-scale-down h-28 w-full p-1" />`;
-           el(`file_${file.name}`).innerHTML = preview + el(`file_${file.name}`).innerHTML + ` (${file.size} bytes)`;
-           el(`file_${file.name}`).querySelectorAll('img')[0].onload = () => URL.revokeObjectURL(uri);
+           const uri = URL.createObjectURL(file),
+             preview = `<img src="${uri}" class="object-scale-down h-28 w-full p-1" />`;
+
+           fileItem.innerHTML = preview + fileItem.innerHTML + ` (${file.size} bytes)`;
+           fileItem.querySelectorAll('img')[0].onload = () => URL.revokeObjectURL(uri);
+           return;
          }
+
+         const icon = 'application/json' === file.type ? 'hero-chat-bubble-left-right'
+           : file.type.startsWith('audio/') ? 'hero-musical-note' : 'hero-document',
+           preview = `<i class="${icon} w-12 shrink-0 mt-1 ml-1 object-cover h-auto"></i>`;
+
+         if (!file.type.startsWith('image/') && 'application/json' !== file.type) {
+           el(categoryList).classList.remove('grid', 'grid-cols-3');
+         }
+
+         fileItem.classList.remove('text-center');
+         fileItem.classList.add('flex', 'flex-row');
+         fileItem.innerHTML = preview
+           + `<div class="flex flex-col justify-start p-3">`
+           + `<p class="text-ellipsis overflow-hidden">${fileItem.innerText}</p>`
+           + `<p>(${file.size} bytes)</p></div>`;
        })
      });
    }
 
    function addHeader(parent, dir, container = false) {
-     const [ title, e, parentDiv, uploadsId, h2Class, uploadsClass ] = container ? [
+     const cols = ['photos', 'stickers_used'].includes(dir) ? 'grid-cols-5' : 'grid-cols-3', [
+       title, e, parentDiv, uploadsId, h2Class, uploadsClass
+     ] = container ? [
        dir, 'div', 'uploads', `uploads_${parent}`, 'font-semibold text-xl mt-5', ''
      ] : [
        capitalise(dir) + ` (<span id="count_${parent}_${dir}">0</span>)`, 'ul',
        `uploads_${parent}`, `uploads_${parent}_${dir}`,
-       'text-xl mt-2', 'grid grid-cols-5 gap-2 max-h-64 overflow-auto p-2',
+       'text-xl mt-2', `grid ${cols} gap-2 max-h-64 overflow-auto p-2`,
      ];
 
      el(parentDiv).innerHTML += `<h2 class="${h2Class}">${title}</h2>`;
