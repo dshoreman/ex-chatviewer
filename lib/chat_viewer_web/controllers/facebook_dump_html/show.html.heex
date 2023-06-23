@@ -42,7 +42,6 @@
      const files = {};
 
      for await (const e of walkTree(entry)) {
-       console.info(e)
        switch (e.name) {
          case 'inbox':
            for await (const contactDir of walkTree(e)) {
@@ -62,7 +61,6 @@
            console.error("Unhandled top-level item '" + e.name + "'");
        }
      }
-     console.log("File list:", files);
    }
 
    function addLogFile(entry, map, parent) {
@@ -75,9 +73,8 @@
        map[parent]['logs'] = [];
      }
 
-     el(logdiv).innerHTML += '<li>' + entry.name + '</li>';
-     el(logdiv + 'Count').innerText = 1 + parseInt(el(logdiv + 'Count').innerText);
      map[parent]['logs'].push(entry);
+     loadPreviews(parent, 'logs', [entry])
    }
 
    async function addFolder(entry, map, parent = 'global') {
@@ -93,11 +90,22 @@
        countId = 'count_' + parent + '_' + entry.name;
 
      div.innerHTML += '<h2 class="text-xl mt-2">' + capitalise(entry.name) + ' (<span id="' + countId + '">0</span>)' + '</h2>';
+     div.innerHTML += '<ul id="uploads_' + parent + '_' + entry.name + '"></ul>';
 
      items = await processEntry(entry);
      map[parent][entry.name] = items;
+     loadPreviews(parent, entry.name, items)
+   }
 
-     document.getElementById(countId).innerText = items.length;
+   function loadPreviews(parent, dir, items) {
+     const parentId = 'uploads_' + parent,
+       categoryList = parentId + '_' + dir,
+       categoryCount = 'logs' === dir ? el(categoryList + 'Count') : el('count_' + parent + '_' + dir);
+
+     items.forEach(file => {
+       el(categoryList).innerHTML += '<li>' + file.name + '</li>';
+       categoryCount.innerText = 1 + parseInt(categoryCount.innerText);
+     });
    }
 
    async function processEntry(entry, items = []) {
