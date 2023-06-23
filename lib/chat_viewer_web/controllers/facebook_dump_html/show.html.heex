@@ -93,7 +93,9 @@
        categoryCount = el('count_' + parent + '_' + dir);
 
      items.forEach(file => {
-       el(categoryList).innerHTML += '<li>' + file.name + '</li>';
+       let itemClass = "bg-slate-100 rounded border-2 border-slate-200 text-xs text-ellipsis overflow-hidden"
+
+       el(categoryList).innerHTML += `<li class="${itemClass}">${file.name}</li>`;
        categoryCount.innerText = 1 + parseInt(categoryCount.innerText);
      });
    }
@@ -104,7 +106,7 @@
      ] : [
        capitalise(dir) + ` (<span id="count_${parent}_${dir}">0</span>)`, 'ul',
        `uploads_${parent}`, `uploads_${parent}_${dir}`,
-       'text-xl mt-2', 'grid grid-cols-3 gap-2',
+       'text-xl mt-2', 'grid grid-cols-3 gap-2 max-h-64 overflow-auto p-2',
      ];
 
      el(parentDiv).innerHTML += `<h2 class="${h2Class}">${title}</h2>`;
