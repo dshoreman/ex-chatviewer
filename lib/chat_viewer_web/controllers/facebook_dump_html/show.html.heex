@@ -10,7 +10,7 @@
 
 <div id="dropzone" class="flex items-center justify-center w-full mt-5">
   <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
-    ondrop="upload(event)">
+    ondrop="handleDrop(event)">
         <div class="flex flex-col items-center justify-center pt-5 pb-6">
             <svg aria-hidden="true" class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
             <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
@@ -21,6 +21,10 @@
 </div>
 
 <div id="uploads"></div>
+
+<div id="actions" class="grid place-items-center hidden">
+  <button onclick="startUpload()" id="upload-btn" class="middle none center bg-blue-500 font-bold text-white uppercase mt-6 pt-4 pb-3 px-12 shadow-md transition-all hover:shadow-lg focus:opacity-[0.85] active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50" disabled>Start Upload</button>
+</div>
 
 <.back navigate={~p"/sources"}>Back to sources</.back>
 
@@ -35,6 +39,9 @@
 
 <template id="photo-tpl">
   <li class="bg-slate-100 rounded border-2 border-slate-200 text-xs align-bottom text-center">
+    <div class="flex-start flex h-1.5 w-full overflow-hidden rounded-sm bg-blue-gray-50 text-xs font-medium">
+      <div class="progress flex h-full items-baseline justify-center overflow-hidden break-all bg-pink-500 text-white" style="width: 0%;"></div>
+    </div>
     <img class="object-scale-down h-28 w-full p-1" />
     <h5 class="text-ellipsis overflow-hidden"></h5>
     <p></p>
@@ -46,18 +53,24 @@
     <i class="object-cover h-auto w-12 shrink-0 mt-1 ml-1" />
     <div class="flex flex-col justify-start p-3">
       <h5 class="text-ellipsis overflow-hidden"></h5>
+      <div class="flex-start flex h-1.5 w-full overflow-hidden rounded-sm bg-blue-gray-50 text-xs font-medium">
+        <div class="progress flex h-full items-baseline justify-center overflow-hidden break-all bg-pink-500 text-white" style="width: 0%;"></div>
+      </div>
       <p></p>
     </div>
   </li>
 </template>
 
  <script>
+   const BATCH_SIZE = 5,
+   files = {};
+
    const capitalise = (s) =>
      s.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
        .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase()),
      el = (id) => document.getElementById(id);
 
-   async function upload(e) {
+   async function handleDrop(e) {
      const items = e.dataTransfer.items,
        entry = items.length === 1 ? items[0].webkitGetAsEntry() : false;
 
@@ -67,8 +80,7 @@
      }
 
      el('dropzone').classList.add('hidden');
-
-     const files = {};
+     el('actions').classList.remove('hidden');
 
      for await (const e of walkTree(entry)) {
        switch (e.name) {
@@ -90,6 +102,36 @@
            console.error("Unhandled top-level item '" + e.name + "'");
        }
      }
+
+     el('upload-btn').disabled = false;
+   }
+
+   function startUpload() {
+     for (const [contact, sections] of Object.entries(files)) {
+       const contactDiv = el(`uploads_${contact}`);
+
+       console.log(`Processing ${Object.keys(sections).length} sections in #uploads_${contact}: `)
+
+       for (const [section, uploads] of Object.entries(sections)) {
+         const filesDiv = el(`uploads_${contact}_${section}`),
+         batches = Math.ceil(uploads.length / BATCH_SIZE);
+         let batch = 1;
+
+         console.log(`   Found ${uploads.length} files in #uploads_${contact}_${section}:`)
+
+         for (let i = 0; i < uploads.length; i += BATCH_SIZE) {
+           console.log(`      Uploading batch ${batch} of ${batches}`)
+           uploadBatch(contact, section, uploads.slice(i, i + BATCH_SIZE))
+           batch++;
+         }
+       }
+     }
+   }
+
+   function uploadBatch(scope, section, filesInBatch) {
+     filesInBatch.forEach(f => {
+       el(`file_${f.name}`).querySelector('.progress').style.width = `${Math.random() * 100}%`;
+     });
    }
 
    function addLogFile(entry, map, parent) {
