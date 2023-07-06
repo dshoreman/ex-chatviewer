@@ -21,6 +21,15 @@ defmodule ChatViewerWeb.FacebookDumpController do
     end
   end
 
+  def upload(conn, %{"id" => dump_id, "scope" => scope, "section" => section, "files" => files}) do
+    json(conn, %{
+      dump: dump_id,
+      scope: scope,
+      section: section,
+      files: Enum.map(files, fn f -> f.filename end)
+    })
+  end
+
   def show(conn, %{"id" => id}) do
     facebook_dump = Sources.get_facebook_dump!(id)
     render(conn, :show, facebook_dump: facebook_dump)
