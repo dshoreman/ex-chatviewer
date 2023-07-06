@@ -20,7 +20,7 @@
     </label>
 </div>
 
-<div id="uploads"></div>
+<div id="uploads" data-uri={~p"/sources/facebook/#{@facebook_dump}/attachments"}></div>
 
 <div id="actions" class="grid place-items-center hidden">
   <button onclick="startUpload()" id="upload-btn" class="middle none center bg-blue-500 font-bold text-white uppercase mt-6 pt-4 pb-3 px-12 shadow-md transition-all hover:shadow-lg focus:opacity-[0.85] active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50" disabled>Start Upload</button>
@@ -63,7 +63,8 @@
 
  <script>
    const BATCH_SIZE = 5,
-   files = {};
+     CSRF_TOKEN = document.querySelector('meta[name=csrf-token]').content,
+     files = {};
 
    const capitalise = (s) =>
      s.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
@@ -110,7 +111,7 @@
      for (const [contact, sections] of Object.entries(files)) {
        const contactDiv = el(`uploads_${contact}`);
 
-       console.log(`Processing ${Object.keys(sections).length} sections in #uploads_${contact}: `)
+       console.log(`Processing ${Object.keys(sections).length} sections in #uploads_${contact}: `);
 
        for (const [section, uploads] of Object.entries(sections)) {
          const filesDiv = el(`uploads_${contact}_${section}`),
@@ -128,10 +129,36 @@
      }
    }
 
-   function uploadBatch(scope, section, filesInBatch) {
-     filesInBatch.forEach(f => {
-       el(`file_${f.name}`).querySelector('.progress').style.width = `${Math.random() * 100}%`;
-     });
+   async function uploadBatch(scope, section, filesInBatch) {
+     const data = new FormData(),
+       request = new XMLHttpRequest();
+
+     data.set('scope', scope);
+     data.set('section', section);
+
+     for (const fe of filesInBatch) {
+       let file = await fileFromEntry(fe);
+
+       data.append('files[]', file);
+
+       el(`file_${fe.name}`).querySelector('.progress').style.width = `10%`;
+     }
+
+     request.onload = () => {
+       const { files } = JSON.parse(request.response);
+
+       files.forEach(f => {
+         el(`file_${f}`).querySelector('.progress').style.width = '100%';
+       });
+     };
+
+     request.open('PUT', el('uploads').dataset.uri);
+     request.setRequestHeader('X-CSRF-Token', CSRF_TOKEN);
+     request.send(data);
+   }
+
+   async function fileFromEntry(fe) {
+     return new Promise((resolve, reject) => fe.file(resolve, reject));
    }
 
    function addLogFile(entry, map, parent) {

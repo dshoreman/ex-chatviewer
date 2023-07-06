@@ -25,6 +25,7 @@ defmodule ChatViewerWeb.Router do
 
     get "/sources", PageController, :sources
     resources "/sources/facebook", FacebookDumpController
+    put "/sources/facebook/:id/attachments", FacebookDumpController, :upload
   end
 
   # Other scopes may use custom stacks.
