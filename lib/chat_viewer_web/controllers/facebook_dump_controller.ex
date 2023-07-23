@@ -22,6 +22,7 @@ defmodule ChatViewerWeb.FacebookDumpController do
   end
 
   def upload(conn, %{"id" => dump_id, "scope" => scope, "section" => section, "files" => files}) do
+    :timer.sleep(50)
     json(conn, %{
       dump: dump_id,
       scope: scope,
