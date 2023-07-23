@@ -34,7 +34,7 @@
 </template>
 <template id="folder-tpl">
   <h2 class="text-xl mt-2"><span class="title"></span> (<span class="count">0</span>)</h2>
-  <ul class="grid gap-2 p-2 max-h-64 overflow-auto"></ul>
+  <ul class="grid gap-2 p-2 max-h-[32rem] overflow-auto"></ul>
 </template>
 
 <template id="photo-tpl">
@@ -64,7 +64,8 @@
 </template>
 
  <script>
-   const BATCH_SIZE = 5,
+   const BATCH_DELAY = 400,
+     BATCH_SIZE = 3,
      CSRF_TOKEN = document.querySelector('meta[name=csrf-token]').content,
      files = {};
 
@@ -120,23 +121,19 @@
        console.log(`Processing ${Object.keys(sections).length} sections in #uploads_${contact}: `);
 
        for (const [section, uploads] of Object.entries(sections)) {
-         const filesDiv = el(`uploads_${contact}_${section}`),
-         batches = Math.ceil(uploads.length / BATCH_SIZE);
-         let batch = 1;
+         const filesDiv = el(`uploads_${contact}_${section}`);
 
-         console.log(`   Found ${uploads.length} files in #uploads_${contact}_${section}:`)
+         console.log(`   Found ${uploads.length} files in #uploads_${contact}_${section}`);
 
-         for (let i = 0; i < uploads.length; i += BATCH_SIZE) {
-           console.log(`      Uploading batch ${batch} of ${batches}`)
-           uploadBatch(contact, section, uploads.slice(i, i + BATCH_SIZE))
-           batch++;
-         }
+         uploadBatch(uploads, contact, section);
        }
      }
    }
 
-   async function uploadBatch(scope, section, filesInBatch) {
-     const data = new FormData(),
+   async function uploadBatch(uploads, scope, section, index = 0, batch = 1) {
+     const batches = Math.ceil(uploads.length / BATCH_SIZE),
+       data = new FormData(),
+       filesInBatch = uploads.slice(index, index + BATCH_SIZE),
        parentDiv = el(`uploads_${scope}_${section}`),
        request = new XMLHttpRequest();
 
@@ -150,6 +147,8 @@
      }
 
      request.onloadstart = () => {
+       console.log(`      [${scope}/${section}] Uploading batch ${batch} of ${batches}...`)
+
        for (const fe of filesInBatch) {
          const icon = el(`file_${fe.name}`).querySelector('.progress');
 
@@ -174,8 +173,16 @@
            icon.classList.remove('animate-spin');
            icon.classList.replace('bg-purple-600', `bg-${css.bg}-400`);
            icon.classList.replace('hero-signal', `hero-${css.icon}`);
-           setTimeout(() => parentDiv.append(el(`file_${fe.name}`)), 300);
+           setTimeout(() => parentDiv.append(el(`file_${fe.name}`)), BATCH_DELAY * 5);
          }
+       }
+     };
+
+     request.onloadend = () => {
+       if (index + BATCH_SIZE < uploads.length) {
+         setTimeout(() => {
+           uploadBatch(uploads, scope, section, index + BATCH_SIZE, batch + 1);
+         }, BATCH_DELAY)
        }
      };
 
