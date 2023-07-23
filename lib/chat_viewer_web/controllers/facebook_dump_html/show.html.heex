@@ -143,27 +143,32 @@
      data.set('section', section);
 
      for (const fe of filesInBatch) {
+       const icon = el(`file_${fe.name}`).querySelector('.progress');
        let file = await fileFromEntry(fe);
 
        data.append('files[]', file);
 
-       el(`file_${fe.name}`).querySelector('.progress').classList
-        .replace('bg-orange-400', 'bg-purple-600');
-       el(`file_${fe.name}`).querySelector('.progress').classList
-        .replace('animate-pulse', 'animate-spin');
+       icon.classList.replace('bg-orange-400', 'bg-purple-600');
+       icon.classList.replace('animate-pulse', 'animate-spin');
      }
 
      request.onload = () => {
-       const { files } = JSON.parse(request.response);
+       let successful = [];
 
-       files.forEach(f => {
-         el(`file_${f}`).querySelector('.progress').classList
-           .remove('animate-spin');
-         el(`file_${f}`).querySelector('.progress').classList
-           .replace('bg-purple-600', 'bg-lime-400');
-         el(`file_${f}`).querySelector('.progress').classList
-           .replace('hero-signal', 'hero-check-circle');
-       });
+       try {
+         ({ files: successful } = JSON.parse(request.response));
+       } finally {
+         for (const fe of filesInBatch) {
+           const css = successful.includes(fe.name)
+             ? { bg: 'lime', icon: 'check-circle' }
+             : { bg: 'red',  icon: 'exclamation-triangle' },
+             icon = el(`file_${fe.name}`).querySelector('.progress');
+
+           icon.classList.remove('animate-spin');
+           icon.classList.replace('bg-purple-600', `bg-${css.bg}-400`);
+           icon.classList.replace('hero-signal', `hero-${css.icon}`);
+         }
+       }
      };
 
      request.open('PUT', el('uploads').dataset.uri);
