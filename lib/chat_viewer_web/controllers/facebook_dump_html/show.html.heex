@@ -137,19 +137,26 @@
 
    async function uploadBatch(scope, section, filesInBatch) {
      const data = new FormData(),
+       parentDiv = el(`uploads_${scope}_${section}`),
        request = new XMLHttpRequest();
 
      data.set('scope', scope);
      data.set('section', section);
 
      for (const fe of filesInBatch) {
-       const icon = el(`file_${fe.name}`).querySelector('.progress');
        let file = await fileFromEntry(fe);
 
        data.append('files[]', file);
+     }
 
-       icon.classList.replace('bg-orange-400', 'bg-purple-600');
-       icon.classList.replace('animate-pulse', 'animate-spin');
+     request.onloadstart = () => {
+       for (const fe of filesInBatch) {
+         const icon = el(`file_${fe.name}`).querySelector('.progress');
+
+         parentDiv.insertBefore(el(`file_${fe.name}`), parentDiv.firstChild);
+         icon.classList.replace('bg-orange-400', 'bg-purple-600');
+         icon.classList.replace('animate-pulse', 'animate-spin');
+       }
      }
 
      request.onload = () => {
@@ -167,6 +174,7 @@
            icon.classList.remove('animate-spin');
            icon.classList.replace('bg-purple-600', `bg-${css.bg}-400`);
            icon.classList.replace('hero-signal', `hero-${css.icon}`);
+           setTimeout(() => parentDiv.append(el(`file_${fe.name}`)), 300);
          }
        }
      };
