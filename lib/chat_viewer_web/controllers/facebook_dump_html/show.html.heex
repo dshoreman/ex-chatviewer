@@ -38,9 +38,11 @@
 </template>
 
 <template id="photo-tpl">
-  <li class="bg-slate-100 rounded border-2 border-slate-200 text-xs align-bottom text-center">
-    <div class="flex-start flex h-1.5 w-full overflow-hidden rounded-sm bg-blue-gray-50 text-xs font-medium">
-      <div class="progress flex h-full items-baseline justify-center overflow-hidden break-all bg-pink-500 text-white" style="width: 0%;"></div>
+  <li class="bg-slate-100 relative rounded border-2 border-slate-200 text-xs align-bottom text-center">
+    <div class="static">
+      <div class="absolute h-6 w-6 top-2 right-3 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.5)]">
+        <i class="hero-signal progress animate-pulse bg-orange-400 w-full h-full" />
+      </div>
     </div>
     <img class="object-scale-down h-28 w-full p-1" />
     <h5 class="text-ellipsis overflow-hidden"></h5>
@@ -141,14 +143,20 @@
 
        data.append('files[]', file);
 
-       el(`file_${fe.name}`).querySelector('.progress').style.width = `10%`;
+       el(`file_${fe.name}`).querySelector('.progress').classList
+        .replace('animate-pulse', 'animate-spin');
      }
 
      request.onload = () => {
        const { files } = JSON.parse(request.response);
 
        files.forEach(f => {
-         el(`file_${f}`).querySelector('.progress').style.width = '100%';
+         el(`file_${f}`).querySelector('.progress').classList
+           .remove('animate-spin');
+         el(`file_${f}`).querySelector('.progress').classList
+           .replace('bg-orange-400', 'bg-lime-400');
+         el(`file_${f}`).querySelector('.progress').classList
+           .replace('hero-signal', 'hero-check-circle');
        });
      };
 
