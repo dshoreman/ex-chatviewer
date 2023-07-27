@@ -166,13 +166,13 @@
        } finally {
          for (const fe of filesInBatch) {
            const css = successful.includes(fe.name)
-             ? { bg: 'lime', icon: 'check-circle' }
-             : { bg: 'red',  icon: 'exclamation-triangle' },
+             ? { bg: 'bg-lime-400', icon: 'hero-check-circle' }
+             : { bg: 'bg-red-400',  icon: 'hero-exclamation-triangle' },
              icon = el(`file_${fe.name}`).querySelector('.progress');
 
            icon.classList.remove('animate-spin');
-           icon.classList.replace('bg-purple-600', `bg-${css.bg}-400`);
-           icon.classList.replace('hero-signal', `hero-${css.icon}`);
+           icon.classList.replace('bg-purple-600', css.bg);
+           icon.classList.replace('hero-signal', css.icon);
            setTimeout(() => parentDiv.append(el(`file_${fe.name}`)), BATCH_DELAY * 5);
          }
        }
