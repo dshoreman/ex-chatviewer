@@ -34,7 +34,26 @@
 </template>
 <template id="folder-tpl">
   <h2 class="text-xl mt-2"><span class="title"></span> (<span class="count">0</span>)</h2>
-  <ul class="grid gap-2 p-2 max-h-[32rem] overflow-auto"></ul>
+  <ul class="mb-5 flex list-none flex-row flex-wrap border-b-0 pl-0" role="tablist">
+    <li role="presentation" class="cursor-pointer">
+      <a role="tab" data-te-nav-active class="tab-pending my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+        Pending
+      </a>
+    </li>
+    <li role="presentation" class="cursor-pointer">
+      <a role="tab" class="tab-complete my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+        Completed
+      </a>
+    </li>
+  </ul>
+  <div class="mb-6">
+    <div role="tabpanel" class="uploads-pending hidden opacity-100 transition-opacity duration-150 ease-linear data-[te-tab-active]:block" data-te-tab-active>
+      <ul class="uploads grid gap-2 p-2 max-h-[32rem] overflow-auto"></ul>
+    </div>
+    <div role="tabpanel" class="uploads-complete hidden opacity-0 transition-opacity duration-150 ease-linear data-[te-tab-active]:block">
+      <ul class="grid gap-2 p-2 max-h-[32rem] overflow-auto"></ul>
+    </div>
+  </div>
 </template>
 
 <template id="photo-tpl">
@@ -72,7 +91,29 @@
    const capitalise = (s) =>
      s.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
        .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase()),
-     el = (id) => document.getElementById(id);
+     el = (id) => document.getElementById(id),
+     tabHandler = e => {
+       const tab = document.getElementById(`${e.target.id}-content`);
+
+       e.preventDefault();
+
+       for (const t of e.target.parentNode.parentNode.children) {
+         e.target.id === t.firstElementChild.id
+          ? t.firstElementChild.setAttribute('data-te-nav-active', true)
+          : t.firstElementChild.removeAttribute('data-te-nav-active');
+       }
+
+       for (const p of tab.parentNode.children) {
+         p.id === `${e.target.id}-content`
+          ? p.setAttribute('data-te-tab-active', true)
+          : p.removeAttribute('data-te-tab-active');
+
+         p.classList.replace('opacity-100', 'opacity-0');
+         p.classList.add('hidden');
+       }
+       tab.classList.remove('hidden');
+       tab.classList.replace('opacity-0', 'opacity-100');
+     };
 
    async function handleDrop(e) {
      const items = e.dataTransfer.items,
@@ -134,6 +175,7 @@
      const batches = Math.ceil(uploads.length / BATCH_SIZE),
        data = new FormData(),
        filesInBatch = uploads.slice(index, index + BATCH_SIZE),
+       completed = el(`uploads_${scope}_${section}-complete`),
        parentDiv = el(`uploads_${scope}_${section}`),
        request = new XMLHttpRequest();
 
@@ -173,7 +215,10 @@
            icon.classList.remove('animate-spin');
            icon.classList.replace('bg-purple-600', css.bg);
            icon.classList.replace('hero-signal', css.icon);
-           setTimeout(() => parentDiv.append(el(`file_${fe.name}`)), BATCH_DELAY * 5);
+
+           if ('bg-lime-400' === css.bg) {
+             setTimeout(() => completed.prepend(el(`file_${fe.name}`)), BATCH_DELAY * 5);
+           }
          }
        }
      };
@@ -242,23 +287,41 @@
    }
 
    function addHeader(parent, dir, container = false) {
-     const [title, tpl, tag, wrapper, idSuffix] = container ? [
-       dir, 'section-tpl', 'div', 'uploads', ''
+     const [title, tpl, wrapper] = container ? [
+       dir, 'section-tpl', 'uploads'
      ] : [
-       capitalise(dir), 'folder-tpl', 'ul', `uploads_${parent}`, `_${dir}`
+       capitalise(dir), 'folder-tpl', `uploads_${parent}`
      ], clone = el(tpl).content.cloneNode(true);
 
      clone.querySelector('.title').textContent = title;
-     clone.querySelector(tag).id =  `uploads_${parent}${idSuffix}`;
 
-     if (!container) {
-       clone.querySelector('.count').id = `count_${parent}_${dir}`;
-       clone.querySelector(tag).classList.add(
-         ['photos', 'stickers_used'].includes(dir) ? 'grid-cols-5' : 'grid-cols-3'
-       );
+     if (container) {
+       clone.querySelector('div').id =  `uploads_${parent}`;
+     } else {
+       const gridClass = ['photos', 'stickers_used'].includes(dir) ? 'grid-cols-5' : 'grid-cols-3';
+
+       setupTabs(clone, parent, dir);
+
+       clone.querySelector('ul.uploads').classList.add(gridClass);
+       clone.querySelector('div.uploads-complete ul').classList.add(gridClass);
      }
 
      el(wrapper).append(clone);
+   }
+
+   function setupTabs(clone, parent, dir) {
+     clone.querySelector('.tab-pending').id = `tabP_${parent}_${dir}`;
+     clone.querySelector('.tab-complete').id = `tabC_${parent}_${dir}`;
+     clone.querySelector('.uploads-pending').id = `tabP_${parent}_${dir}-content`;
+     clone.querySelector('.uploads-complete').id = `tabC_${parent}_${dir}-content`;
+     clone.querySelector('.uploads-pending ul').id = `uploads_${parent}_${dir}`;
+     clone.querySelector('.uploads-complete ul').id = `uploads_${parent}_${dir}-complete`;
+
+     clone.querySelector('.count-pending').id = `countP_${parent}_${dir}`;
+     clone.querySelector('.count-complete').id = `countC_${parent}_${dir}`;
+     clone.querySelector('.count-total').id = `countT_${parent}_${dir}`;
+
+     clone.querySelectorAll('a[role="tab"]').forEach(tab => tab.addEventListener('click', tabHandler));
    }
 
    function makeTemplate(file, icon = null, isImage = false) {
