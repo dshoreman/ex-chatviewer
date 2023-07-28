@@ -84,7 +84,7 @@
 
  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/tw-elements/dist/js/tw-elements.umd.min.js"></script>
  <script>
-   const BATCH_DELAY = 400,
+   const BATCH_DELAY = 2000,
      BATCH_SIZE = 3,
      CSRF_TOKEN = document.querySelector('meta[name=csrf-token]').content,
      files = {};
@@ -203,10 +203,13 @@
              pending.innerText = parseInt(pending.innerText) - 1;
              complete.innerText = 1 + parseInt(complete.innerText);
 
-             if (0 === parseInt(pending.innerText)) {
-               el(`tabC_${scope}_${section}`).click();
-             }
-             setTimeout(() => completed.prepend(el(`file_${fe.name}`)), BATCH_DELAY * 5);
+             setTimeout(() => {
+               completed.prepend(el(`file_${fe.name}`));
+
+               if (0 === parseInt(pending.innerText)) {
+                 te.Tab.getInstance(el(`tabC_${scope}_${section}`)).show();
+               }
+             }, BATCH_DELAY);
            }
          }
        }
@@ -214,9 +217,7 @@
 
      request.onloadend = () => {
        if (index + BATCH_SIZE < uploads.length) {
-         setTimeout(() => {
-           uploadBatch(uploads, scope, section, index + BATCH_SIZE, batch + 1);
-         }, BATCH_DELAY)
+         uploadBatch(uploads, scope, section, index + BATCH_SIZE, batch + 1);
        }
      };
 
