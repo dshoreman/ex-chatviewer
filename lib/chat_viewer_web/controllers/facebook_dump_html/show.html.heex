@@ -8,5 +8,370 @@
   </:actions>
 </.header>
 
+<div id="dropzone" class="flex items-center justify-center w-full mt-5">
+  <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+    ondrop="handleDrop(event)">
+        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <svg aria-hidden="true" class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+        </div>
+        <input id="dropzone-file" type="file" multiple class="hidden" />
+    </label>
+</div>
+
+<div id="uploads" data-uri={~p"/sources/facebook/#{@facebook_dump}/attachments"}></div>
+
+<div id="actions" class="grid place-items-center hidden">
+  <button onclick="startUpload()" id="upload-btn" class="middle none center bg-blue-500 font-bold text-white uppercase mt-6 pt-4 pb-3 px-12 shadow-md transition-all hover:shadow-lg focus:opacity-[0.85] active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50" disabled>Start Upload</button>
+</div>
 
 <.back navigate={~p"/sources"}>Back to sources</.back>
+
+<template id="section-tpl">
+  <h2 class="title font-semibold text-xl mt-5"></h2>
+  <div></div>
+</template>
+<template id="folder-tpl">
+  <h2 class="text-xl mt-2 title"></h2>
+  <ul class="mb-5 flex list-none flex-row flex-wrap border-b-0 pl-0" role="tablist" data-te-nav-ref>
+    <li role="presentation">
+      <a role="tab" data-te-nav-active aria-selected="true" class="tab-pending my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+        Pending (<span class="count-pending">0</span>)
+      </a>
+    </li>
+    <li role="presentation">
+      <a role="tab" class="tab-complete my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+        Completed (<span class="count-complete">0</span>/<span class="count-total">0</span>)
+      </a>
+    </li>
+  </ul>
+  <div class="mb-6">
+    <div role="tabpanel" class="uploads-pending hidden opacity-100 transition-opacity duration-150 ease-linear data-[te-tab-active]:block" data-te-tab-active>
+      <ul class="uploads grid gap-2 p-2 max-h-[32rem] overflow-auto"></ul>
+    </div>
+    <div role="tabpanel" class="uploads-complete hidden opacity-0 transition-opacity duration-150 ease-linear data-[te-tab-active]:block">
+      <ul class="grid gap-2 p-2 max-h-[32rem] overflow-auto"></ul>
+    </div>
+  </div>
+</template>
+
+<template id="photo-tpl">
+  <li class="bg-slate-100 relative rounded border-2 border-slate-200 text-xs align-bottom text-center">
+    <div class="static">
+      <div class="absolute h-6 w-6 top-2 right-3 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.5)]">
+        <i class="hero-signal progress hidden bg-orange-400 w-full h-full" />
+      </div>
+    </div>
+    <img class="object-scale-down h-28 w-full p-1" />
+    <h5 class="text-ellipsis overflow-hidden"></h5>
+    <p></p>
+  </li>
+</template>
+
+<template id="file-tpl">
+  <li class="bg-slate-100 rounded border-2 border-slate-200 text-xs align-bottom flex flex-row">
+    <i class="object-cover h-auto w-12 shrink-0 mt-1 ml-1" />
+    <div class="flex flex-col justify-start p-3">
+      <h5 class="text-ellipsis overflow-hidden"></h5>
+      <div class="flex-start flex h-1.5 w-full overflow-hidden rounded-sm bg-blue-gray-50 text-xs font-medium">
+        <div class="progress flex h-full items-baseline justify-center overflow-hidden break-all bg-pink-500 text-white" style="width: 0%;"></div>
+      </div>
+      <p></p>
+    </div>
+  </li>
+</template>
+
+ <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/tw-elements/dist/js/tw-elements.umd.min.js"></script>
+ <script>
+   const BATCH_DELAY = 2000,
+     BATCH_SIZE = 3,
+     CSRF_TOKEN = document.querySelector('meta[name=csrf-token]').content,
+     files = {};
+
+   const capitalise = (s) =>
+     s.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
+       .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase()),
+     el = (id) => document.getElementById(id);
+
+   async function handleDrop(e) {
+     const items = e.dataTransfer.items,
+       entry = items.length === 1 ? items[0].webkitGetAsEntry() : false;
+
+     if (!entry || !entry.isDirectory || 'messages' !== entry.name) {
+       alert("Please drop only the 'messages' folder!");
+       return;
+     }
+
+     el('dropzone').classList.add('hidden');
+     el('actions').classList.remove('hidden');
+
+     for await (const e of walkTree(entry)) {
+       switch (e.name) {
+         case 'inbox':
+           for await (const contactDir of walkTree(e)) {
+             console.info("Found backup for " + contactDir.name);
+             for await (const contactItem of walkTree(contactDir)) {
+               contactItem.isDirectory
+                 ? addFolder(contactItem, files, contactDir.name)
+                 : addLogFile(contactItem, files, contactDir.name)
+             }
+           }
+           break;
+         case 'photos':
+         case 'stickers_used':
+           addFolder(e, files);
+           break;
+         default:
+           console.error("Unhandled top-level item '" + e.name + "'");
+       }
+     }
+
+     el('upload-btn').disabled = false;
+   }
+
+   function startUpload() {
+     document.querySelectorAll('.progress').forEach((icon) => {
+      icon.classList.replace('hidden', 'animate-pulse')
+     });
+
+     for (const [contact, sections] of Object.entries(files)) {
+       const contactDiv = el(`uploads_${contact}`);
+
+       console.log(`Processing ${Object.keys(sections).length} sections in #uploads_${contact}: `);
+
+       for (const [section, uploads] of Object.entries(sections)) {
+         const filesDiv = el(`tabP_${contact}_${section}-uploads`);
+
+         console.log(`   Found ${uploads.length} files in #uploads_${contact}_${section}`);
+         el('countT_' + contact + '_' + section).innerText = uploads.length;
+
+         uploadBatch(uploads, contact, section);
+       }
+     }
+   }
+
+   async function uploadBatch(uploads, scope, section, index = 0, batch = 1) {
+     const batches = Math.ceil(uploads.length / BATCH_SIZE),
+       data = new FormData(),
+       filesInBatch = uploads.slice(index, index + BATCH_SIZE),
+       completed = el(`tabC_${scope}_${section}-uploads`),
+       parentDiv = el(`tabP_${scope}_${section}-uploads`),
+       request = new XMLHttpRequest();
+
+     data.set('scope', scope);
+     data.set('section', section);
+
+     for (const fe of filesInBatch) {
+       let file = await fileFromEntry(fe);
+
+       data.append('files[]', file);
+     }
+
+     request.onloadstart = () => {
+       console.log(`      [${scope}/${section}] Uploading batch ${batch} of ${batches}...`)
+
+       for (const fe of filesInBatch) {
+         const icon = el(`file_${fe.name}`).querySelector('.progress');
+
+         parentDiv.insertBefore(el(`file_${fe.name}`), parentDiv.firstChild);
+         icon.classList.replace('bg-orange-400', 'bg-purple-600');
+         icon.classList.replace('animate-pulse', 'animate-spin');
+       }
+     }
+
+     request.onload = () => {
+       let successful = [];
+
+       try {
+         ({ files: successful, scope, section } = JSON.parse(request.response));
+       } finally {
+         for (const fe of filesInBatch) {
+           const css = successful.includes(fe.name)
+             ? { bg: 'bg-lime-400', icon: 'hero-check-circle' }
+             : { bg: 'bg-red-400',  icon: 'hero-exclamation-triangle' },
+             icon = el(`file_${fe.name}`).querySelector('.progress');
+
+           icon.classList.remove('animate-spin');
+           icon.classList.replace('bg-purple-600', css.bg);
+           icon.classList.replace('hero-signal', css.icon);
+
+           if ('bg-lime-400' === css.bg) {
+             const complete = el(`countC_${scope}_${section}`),
+               pending = el(`countP_${scope}_${section}`);
+
+             pending.innerText = parseInt(pending.innerText) - 1;
+             complete.innerText = 1 + parseInt(complete.innerText);
+
+             setTimeout(() => {
+               completed.prepend(el(`file_${fe.name}`));
+
+               if (0 === parseInt(pending.innerText)) {
+                 te.Tab.getInstance(el(`tabC_${scope}_${section}`)).show();
+               }
+             }, BATCH_DELAY);
+           }
+         }
+       }
+     };
+
+     request.onloadend = () => {
+       if (index + BATCH_SIZE < uploads.length) {
+         uploadBatch(uploads, scope, section, index + BATCH_SIZE, batch + 1);
+       }
+     };
+
+     request.open('PUT', el('uploads').dataset.uri);
+     request.setRequestHeader('X-CSRF-Token', CSRF_TOKEN);
+     request.send(data);
+   }
+
+   async function fileFromEntry(fe) {
+     return new Promise((resolve, reject) => fe.file(resolve, reject));
+   }
+
+   function addLogFile(entry, map, parent) {
+     if (!Object.hasOwn(map[parent], 'logs')) {
+       addHeader(parent, 'logs');
+       map[parent]['logs'] = [];
+     }
+
+     map[parent]['logs'].push(entry);
+     loadPreviews(parent, 'logs', [entry])
+   }
+
+   async function addFolder(entry, map, parent = 'global') {
+     if (!Object.hasOwn(map, parent)) {
+       addHeader(parent, 'global' === parent ? 'Top-level Files' : parent, true);
+       map[parent] = {};
+     }
+
+     addHeader(parent, entry.name);
+
+     items = await processEntry(entry);
+     map[parent][entry.name] = items;
+
+     loadPreviews(parent, entry.name, items)
+   }
+
+   function loadPreviews(parent, dir, items) {
+     const parentId = 'uploads_' + parent,
+       categoryList = `tabP_${parent}_${dir}-uploads`,
+       categoryCount = el('countP_' + parent + '_' + dir);
+
+     items.forEach(file => {
+       file.file(file => {
+         const icon = 'application/json' === file.type ? 'hero-chat-bubble-left-right'
+           : file.type.startsWith('audio/') ? 'hero-musical-note' : 'hero-document',
+           isImage = file.type.startsWith('image/');
+
+         if (!isImage && 'application/json' !== file.type) {
+           el(categoryList).classList.remove('grid', 'grid-cols-3');
+         }
+
+         el(categoryList).append(makeTemplate(file, icon, isImage));
+       });
+
+       categoryCount.innerText = 1 + parseInt(categoryCount.innerText);
+     });
+   }
+
+   function addHeader(parent, dir, container = false) {
+     const [title, tpl, wrapper] = container ? [
+       dir, 'section-tpl', 'uploads'
+     ] : [
+       capitalise(dir), 'folder-tpl', `uploads_${parent}`
+     ], clone = el(tpl).content.cloneNode(true);
+
+     clone.querySelector('.title').textContent = title;
+
+     if (container) {
+       clone.querySelector('div').id =  `uploads_${parent}`;
+     } else {
+       const gridClass = ['photos', 'stickers_used'].includes(dir) ? 'grid-cols-5' : 'grid-cols-3';
+
+       setupTabs(clone, parent, dir);
+
+       clone.querySelector('ul.uploads').classList.add(gridClass);
+       clone.querySelector('div.uploads-complete ul').classList.add(gridClass);
+     }
+
+     el(wrapper).append(clone);
+   }
+
+   function setupTabs(clone, parent, dir) {
+     setupTab(clone, 'pending', parent, dir);
+     setupTab(clone, 'complete', parent, dir);
+
+     clone.querySelector('.count-pending').id = `countP_${parent}_${dir}`;
+     clone.querySelector('.count-complete').id = `countC_${parent}_${dir}`;
+     clone.querySelector('.count-total').id = `countT_${parent}_${dir}`;
+
+     clone.querySelectorAll('a[role="tab"]').forEach(tab => {
+       const triggered = new te.Tab(tab);
+
+       tab.addEventListener('click', () => triggered.show());
+     });
+   }
+
+   function setupTab(clone, name, scope, section) {
+     const content = clone.querySelector(`.uploads-${name}`),
+       pss = `tab${name.charAt(0).toUpperCase()}_${scope}_${section}`,
+       tab = clone.querySelector(`.tab-${name}`);
+
+     tab.id = pss;
+     tab.setAttribute('aria-controls', `${pss}-content`);
+     tab.href = tab.dataset.teTarget = `#${pss}-content`;
+
+     content.id = `${pss}-content`;
+     content.setAttribute('aria-labelledby', pss);
+     content.querySelector(`ul`).id = `${pss}-uploads`;
+   }
+
+   function makeTemplate(file, icon = null, isImage = false) {
+     const clone = el(`${isImage ? 'photo' : 'file'}-tpl`).content.cloneNode(true),
+       img = clone.querySelector('img'),
+       uri = URL.createObjectURL(file);
+
+     clone.querySelector('li').id = `file_${file.name}`;
+     clone.querySelector('h5').textContent = file.name;
+     clone.querySelector('p').textContent = `${file.size} bytes`;
+
+     if (isImage) {
+       clone.querySelector('img').src = uri;
+       clone.querySelector('img').onload = () => URL.revokeObjectURL(uri);
+     } else {
+       clone.querySelector('i').classList.add(icon);
+     }
+
+     return clone;
+   }
+
+   async function processEntry(entry, items = []) {
+     if (entry.isDirectory) {
+       for await (const e of walkTree(entry)) {
+         await processEntry(e, items)
+       }
+     } else {
+       items.push(entry);
+     }
+
+     return items;
+   }
+
+   async function* walkTree(dir) {
+     const reader = dir.createReader(),
+       nextBatch = () => new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+
+     while (true) {
+       let entries = await nextBatch();
+
+       if (!entries.length) {
+         break;
+       }
+       for (const entry of entries) {
+         yield entry;
+       }
+     }
+   }
+ </script>
