@@ -49,6 +49,9 @@
       </li>
     </ul>
   </div>
+  <div class="flex h-3 w-full rounded-sm">
+    <div class="section-progress bg-pink-500 rounded-bl-lg rounded-r-lg" style="width: 0%;"></div>
+  </div>
   <div class="mb-6">
     <div role="tabpanel" class="uploads-pending hidden opacity-100 transition-opacity duration-150 ease-linear data-[te-tab-active]:block" data-te-tab-active>
       <ul class="uploads grid gap-2 p-2 max-h-[32rem] overflow-auto"></ul>
@@ -199,7 +202,8 @@
          ({ files: successful, scope, section } = JSON.parse(request.response));
        } finally {
          const complete = el(`countC_${scope}_${section}`),
-           pending = el(`countP_${scope}_${section}`);
+           pending = el(`countP_${scope}_${section}`),
+           total = el(`countT_${scope}_${section}`);
 
          for (const fe of filesInBatch) {
            const css = successful.includes(fe.name)
@@ -216,6 +220,12 @@
              complete.innerText = 1 + parseInt(complete.innerText);
 
              setTimeout(() => completed.prepend(el(`file_${fe.name}`)), BATCH_DELAY);
+             setTimeout(() => {
+               const pct = 100 * (parseInt(complete.innerText) / parseInt(total.innerText));
+
+               el(`${scope}_${section}-progress`).style.width = `${pct}%`;
+             }, BATCH_DELAY / 3);
+
            }
          }
 
@@ -304,6 +314,8 @@
          clone.querySelector('ul.uploads').classList.add(gridClass);
          clone.querySelector('div.uploads-complete ul').classList.add(gridClass);
        }
+
+       clone.querySelector('.section-progress').id = `${parent}_${dir}-progress`;
      }
 
      el(wrapper).append(clone);
