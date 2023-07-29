@@ -43,7 +43,7 @@
         </a>
       </li>
       <li role="presentation">
-        <a role="tab" class="tab-complete block border-x-0 border-b-2 border-t-0 border-transparent px-5 pb-1 pt-2 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+        <a role="tab" class="tab-complete pointer-events-none block border-x-0 border-b-2 border-t-0 border-transparent px-5 pb-1 pt-2 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
           Completed (<span class="count-complete">0</span>/<span class="count-total">0</span>)
         </a>
       </li>
@@ -180,7 +180,8 @@
      }
 
      request.onloadstart = () => {
-       console.log(`      [${scope}/${section}] Uploading batch ${batch} of ${batches}...`)
+       console.log(`      [${scope}/${section}] Uploading batch ${batch} of ${batches}...`);
+       el(`tabC_${scope}_${section}`).classList.remove('pointer-events-none');
 
        for (const fe of filesInBatch) {
          const icon = el(`file_${fe.name}`).querySelector('.progress');
@@ -197,6 +198,9 @@
        try {
          ({ files: successful, scope, section } = JSON.parse(request.response));
        } finally {
+         const complete = el(`countC_${scope}_${section}`),
+           pending = el(`countP_${scope}_${section}`);
+
          for (const fe of filesInBatch) {
            const css = successful.includes(fe.name)
              ? { bg: 'bg-lime-400', icon: 'hero-check-circle' }
@@ -208,20 +212,18 @@
            icon.classList.replace('hero-signal', css.icon);
 
            if ('bg-lime-400' === css.bg) {
-             const complete = el(`countC_${scope}_${section}`),
-               pending = el(`countP_${scope}_${section}`);
-
              pending.innerText = parseInt(pending.innerText) - 1;
              complete.innerText = 1 + parseInt(complete.innerText);
 
-             setTimeout(() => {
-               completed.prepend(el(`file_${fe.name}`));
-
-               if (0 === parseInt(pending.innerText)) {
-                 te.Tab.getInstance(el(`tabC_${scope}_${section}`)).show();
-               }
-             }, BATCH_DELAY);
+             setTimeout(() => completed.prepend(el(`file_${fe.name}`)), BATCH_DELAY);
            }
+         }
+
+         if (0 === parseInt(pending.innerText)) {
+           setTimeout(() => {
+             te.Tab.getInstance(el(`tabC_${scope}_${section}`)).show();
+             el(`tabP_${scope}_${section}`).classList.add('pointer-events-none');
+           }, BATCH_DELAY);
          }
        }
      };
