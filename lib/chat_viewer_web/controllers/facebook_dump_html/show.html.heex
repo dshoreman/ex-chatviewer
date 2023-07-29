@@ -34,16 +34,16 @@
 </template>
 <template id="folder-tpl">
   <div class="flex border-b-2 mt-2">
-    <h2 class="grow text-xl title">
+    <h2 class="grow text-xl title pl-5">
     </h2>
     <ul class="flex list-none flex-row flex-wrap border-b-0 pl-0" role="tablist" data-te-nav-ref>
       <li role="presentation">
-        <a role="tab" data-te-nav-active aria-selected="true" class="tab-pending block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-1 pt-2 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+        <a role="tab" data-te-nav-active aria-selected="true" class="tab-pending block border-x-0 border-b-2 border-t-0 border-transparent px-5 pb-1 pt-2 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
           Pending (<span class="count-pending">0</span>)
         </a>
       </li>
       <li role="presentation">
-        <a role="tab" class="tab-complete block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-1 pt-2 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+        <a role="tab" class="tab-complete block border-x-0 border-b-2 border-t-0 border-transparent px-5 pb-1 pt-2 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
           Completed (<span class="count-complete">0</span>/<span class="count-total">0</span>)
         </a>
       </li>
@@ -90,7 +90,7 @@
    const BATCH_DELAY = 2000,
      BATCH_SIZE = 3,
      CSRF_TOKEN = document.querySelector('meta[name=csrf-token]').content,
-     files = {};
+     files = {'global': {}};
 
    const capitalise = (s) =>
      s.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
@@ -108,12 +108,18 @@
 
      el('dropzone').classList.add('hidden');
      el('actions').classList.remove('hidden');
+     addHeader('global', 'Global files', true);
 
      for await (const e of walkTree(entry)) {
        switch (e.name) {
          case 'inbox':
            for await (const contactDir of walkTree(e)) {
-             console.info("Found backup for " + contactDir.name);
+             const { name } = contactDir;
+
+             console.info(`Found backup for '${name}'`);
+             addHeader(name, `Inbox: ${name}`, true);
+             files[name] = {};
+
              for await (const contactItem of walkTree(contactDir)) {
                contactItem.isDirectory
                  ? addFolder(contactItem, files, contactDir.name)
@@ -234,10 +240,6 @@
    }
 
    function addLogFile(entry, map, parent) {
-     if (!Object.hasOwn(map, parent)) {
-       addHeader(parent, parent, true);
-       map[parent] = {};
-     }
      if (!Object.hasOwn(map[parent], 'logs')) {
        addHeader(parent, 'logs');
        map[parent]['logs'] = [];
@@ -248,11 +250,6 @@
    }
 
    async function addFolder(entry, map, parent = 'global') {
-     if (!Object.hasOwn(map, parent)) {
-       addHeader(parent, 'global' === parent ? 'Top-level Files' : parent, true);
-       map[parent] = {};
-     }
-
      addHeader(parent, entry.name);
 
      items = await processEntry(entry);
