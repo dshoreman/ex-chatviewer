@@ -2,7 +2,9 @@ defmodule ChatViewer.Repo.Migrations.CreateUsersAuthTables do
   use Ecto.Migration
 
   def change do
-    execute "CREATE EXTENSION IF NOT EXISTS citext", ""
+    if System.get_env("DB_USE_SQLITE") == "1" do
+      execute "CREATE EXTENSION IF NOT EXISTS citext", ""
+    end
 
     create table(:users) do
       add :email, :citext, null: false

@@ -1,3 +1,6 @@
+# Editor files
+/.vscode/
+
 # The directory Mix will write compiled artifacts to.
 /_build/
 
@@ -35,3 +38,7 @@ chat_viewer-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Files for SQLite
+chat_viewer_dev
+chat_viewer_dev-shm
+chat_viewer_dev-wal
