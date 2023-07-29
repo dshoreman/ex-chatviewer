@@ -234,6 +234,10 @@
    }
 
    function addLogFile(entry, map, parent) {
+     if (!Object.hasOwn(map, parent)) {
+       addHeader(parent, parent, true);
+       map[parent] = {};
+     }
      if (!Object.hasOwn(map[parent], 'logs')) {
        addHeader(parent, 'logs');
        map[parent]['logs'] = [];
