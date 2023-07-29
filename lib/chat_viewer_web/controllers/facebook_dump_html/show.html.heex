@@ -74,13 +74,15 @@
 
 <template id="file-tpl">
   <li class="bg-slate-100 rounded border-2 border-slate-200 text-xs align-bottom flex flex-row">
-    <i class="object-cover h-auto w-12 shrink-0 mt-1 ml-1" />
-    <div class="flex flex-col justify-start p-3">
+    <i class="file-icon object-cover h-auto w-12 shrink-0 mt-1 ml-1" />
+    <div class="flex flex-col grow p-3">
       <h5 class="text-ellipsis overflow-hidden"></h5>
-      <div class="flex-start flex h-1.5 w-full overflow-hidden rounded-sm bg-blue-gray-50 text-xs font-medium">
-        <div class="progress flex h-full items-baseline justify-center overflow-hidden break-all bg-pink-500 text-white" style="width: 0%;"></div>
-      </div>
       <p></p>
+    </div>
+    <div class="pt-1 pr-2">
+      <div class="h-6 w-6 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.5)]">
+        <i class="hero-signal progress hidden bg-orange-400 w-full h-full" />
+      </div>
     </div>
   </li>
 </template>
@@ -347,7 +349,7 @@
        clone.querySelector('img').src = uri;
        clone.querySelector('img').onload = () => URL.revokeObjectURL(uri);
      } else {
-       clone.querySelector('i').classList.add(icon);
+       clone.querySelector('i.file-icon').classList.add(icon);
      }
 
      return clone;
