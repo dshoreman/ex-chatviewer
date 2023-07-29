@@ -33,19 +33,22 @@
   <div></div>
 </template>
 <template id="folder-tpl">
-  <h2 class="text-xl mt-2 title"></h2>
-  <ul class="mb-5 flex list-none flex-row flex-wrap border-b-0 pl-0" role="tablist" data-te-nav-ref>
-    <li role="presentation">
-      <a role="tab" data-te-nav-active aria-selected="true" class="tab-pending my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
-        Pending (<span class="count-pending">0</span>)
-      </a>
-    </li>
-    <li role="presentation">
-      <a role="tab" class="tab-complete my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
-        Completed (<span class="count-complete">0</span>/<span class="count-total">0</span>)
-      </a>
-    </li>
-  </ul>
+  <div class="flex border-b-2 mt-2">
+    <h2 class="grow text-xl title">
+    </h2>
+    <ul class="flex list-none flex-row flex-wrap border-b-0 pl-0" role="tablist" data-te-nav-ref>
+      <li role="presentation">
+        <a role="tab" data-te-nav-active aria-selected="true" class="tab-pending block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-1 pt-2 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+          Pending (<span class="count-pending">0</span>)
+        </a>
+      </li>
+      <li role="presentation">
+        <a role="tab" class="tab-complete block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-1 pt-2 text-xs font-medium uppercase leading-tight text-neutral-500 hover:isolate hover:border-transparent hover:bg-neutral-100 focus:isolate focus:border-transparent data-[te-nav-active]:border-primary data-[te-nav-active]:text-primary dark:text-neutral-400 dark:hover:bg-transparent dark:data-[te-nav-active]:border-primary-400 dark:data-[te-nav-active]:text-primary-400">
+          Completed (<span class="count-complete">0</span>/<span class="count-total">0</span>)
+        </a>
+      </li>
+    </ul>
+  </div>
   <div class="mb-6">
     <div role="tabpanel" class="uploads-pending hidden opacity-100 transition-opacity duration-150 ease-linear data-[te-tab-active]:block" data-te-tab-active>
       <ul class="uploads grid gap-2 p-2 max-h-[32rem] overflow-auto"></ul>
