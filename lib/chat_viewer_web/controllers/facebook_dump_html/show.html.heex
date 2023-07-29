@@ -296,8 +296,10 @@
 
        setupTabs(clone, parent, dir);
 
-       clone.querySelector('ul.uploads').classList.add(gridClass);
-       clone.querySelector('div.uploads-complete ul').classList.add(gridClass);
+       if (['logs', 'photos', 'stickers_used'].includes(dir)) {
+         clone.querySelector('ul.uploads').classList.add(gridClass);
+         clone.querySelector('div.uploads-complete ul').classList.add(gridClass);
+       }
      }
 
      el(wrapper).append(clone);
